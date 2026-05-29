@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>除錯測試</title>
+<style>
+body { background:#0a0c10; color:#e8eaf0; font-family:sans-serif; padding:20px; }
+button { background:#c9a84c; border:none; padding:12px 24px; border-radius:8px; font-size:14px; color:#000; cursor:pointer; width:100%; margin-bottom:12px; }
+pre { background:#111318; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:16px; font-size:11px; white-space:pre-wrap; word-break:break-all; min-height:60px; }
+input { width:100%; background:#181b22; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px; color:#e8eaf0; font-size:13px; margin-bottom:12px; box-sizing:border-box; }
+</style>
+</head>
+<body>
+<h2 style="color:#f0c96e; margin-bottom:16px;">App 除錯工具</h2>
+ 
+<input type="text" id="apikey" placeholder="貼上 API Key">
+ 
+<button onclick="test()">測試完整流程</button>
+ 
+<pre id="result">點上方按鈕開始測試...</pre>
+ 
+<script>
+async function test() {
+  const key = document.getElementById('apikey').value.trim();
+  const result = document.getElementById('result');
+  
+  if (!key) { result.textContent = '請填入 API Key'; return; }
+  
+  result.textContent = '步驟 1：送出請求到 Worker...\n';
+  
+  try {
+    const resp = await fetch('https://claude-proxy.mmiachenn.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: key,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 100,
+        messages: [{ role: 'user', content: '請回覆「測試成功」四個字' }]
+      })
+    });
+    
+    result.textContent += '步驟 2：Worker 回應狀態：' + resp.status + '\n';
+    
+    const data = await resp.json();
+    result.textContent += '步驟 3：收到回應：\n' + JSON.stringify(data, null, 2);
+    
+  } catch(e) {
+    result.textContent += '錯誤：' + e.message;
+  }
+}
+</script>
+</body>
+</html>
