@@ -32,7 +32,7 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; max-width: 430px; margin: 0 auto; }
-
+ 
 /* NAV */
 .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,12,16,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 20px 0; }
 .nav-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -41,16 +41,16 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .nav-tabs { display: flex; gap: 0; }
 .tab-btn { flex: 1; padding: 8px 4px; font-size: 12px; font-family: var(--sans); font-weight: 400; color: var(--text3); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em; }
 .tab-btn.active { color: var(--gold2); border-bottom-color: var(--gold); }
-
+ 
 /* PAGES */
 .page { display: none; padding: 20px; }
 .page.active { display: block; }
-
+ 
 /* SECTION HEADER */
 .sec-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .sec-head h2 { font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; }
 .sec-head .line { flex: 1; height: 1px; background: var(--border); }
-
+ 
 /* AI SUMMARY CARD */
 .ai-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; position: relative; overflow: hidden; }
 .ai-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--gold), var(--blue), var(--up)); }
@@ -108,7 +108,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .auto-stock-info { background: var(--surface2); border-radius: var(--radius-sm); padding: 8px; }
 .auto-price { font-size: 14px; font-family: var(--mono); color: var(--text); font-weight: 500; }
 .auto-chg-val { font-size: 11px; font-family: var(--mono); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
-
+ 
 /* US MARKET CARDS */
 .us-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
 .us-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; }
@@ -117,7 +117,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .us-chg { font-size: 11px; font-family: var(--mono); margin-top: 2px; }
 .us-chg.up { color: var(--up); }
 .us-chg.down { color: var(--down); }
-
+ 
 /* TW STOCKS */
 .stock-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .stock-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s; }
@@ -134,7 +134,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .stock-chg.flat { background: rgba(255,255,255,0.05); color: var(--text3); }
 .add-stock-btn { background: var(--surface); border: 1px dashed var(--border2); border-radius: var(--radius); padding: 14px; text-align: center; cursor: pointer; color: var(--text3); font-size: 13px; transition: all 0.2s; }
 .add-stock-btn:hover { border-color: var(--gold); color: var(--gold); }
-
+ 
 /* CHART */
 .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
 .chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -143,7 +143,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .period-btns { display: flex; gap: 4px; }
 .period-btn { font-size: 10px; padding: 3px 8px; border-radius: 4px; background: none; border: 1px solid var(--border); color: var(--text3); cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
 .period-btn.active { background: var(--gold); border-color: var(--gold); color: #000; }
-
+ 
 /* JOURNAL */
 .journal-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
 .form-row { margin-bottom: 12px; }
@@ -158,7 +158,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .mood-btn.selected { border-color: var(--gold); background: rgba(201,168,76,0.1); }
 .save-btn { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: var(--radius-sm); color: #000; font-size: 14px; font-weight: 500; font-family: var(--sans); cursor: pointer; transition: opacity 0.2s; }
 .save-btn:active { opacity: 0.8; }
-
+ 
 /* HISTORY */
 .history-list { display: flex; flex-direction: column; gap: 10px; }
 .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
@@ -168,7 +168,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .history-chg { font-size: 12px; font-family: var(--mono); }
 .history-note { font-size: 12px; color: var(--text2); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
 .history-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; line-height: 1.8; }
-
+ 
 /* MODAL */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: flex-end; }
 .modal-overlay.open { display: flex; }
@@ -180,11 +180,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .modal-btns { display: flex; gap: 8px; }
 .modal-confirm { flex: 1; padding: 12px; background: var(--gold); border: none; border-radius: var(--radius-sm); color: #000; font-size: 14px; font-weight: 500; cursor: pointer; }
 .modal-cancel { padding: 12px 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text2); font-size: 14px; cursor: pointer; }
-
+ 
 /* TOAST */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--gold); color: var(--gold); font-size: 12px; font-family: var(--mono); padding: 8px 16px; border-radius: 20px; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
 .toast.show { opacity: 1; }
-
+ 
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -192,7 +192,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 </style>
 </head>
 <body>
-
+ 
 <nav class="nav">
   <div class="nav-top">
     <div class="nav-logo">股觀 · StockWatch</div>
@@ -205,12 +205,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
     <button class="tab-btn" onclick="switchTab('history')">歷史</button>
   </div>
 </nav>
-
+ 
 <!-- PAGE: MARKET -->
 <div class="page active" id="page-market">
-
+ 
   <div style="height:16px"></div>
-
+ 
   <div class="sec-head"><h2>AI 市場摘要</h2><div class="line"></div></div>
   <div class="ai-card">
     <div class="ai-header">
@@ -224,7 +224,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
       </div>
     </div>
   </div>
-
+ 
   <div class="sec-head"><h2>美股三大指數</h2><div class="line"></div></div>
   <div class="us-grid">
     <div class="us-card">
@@ -243,7 +243,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
       <div class="us-chg" id="us-nq-chg">--</div>
     </div>
   </div>
-
+ 
   <div class="sec-head"><h2>大盤走勢（模擬）</h2><div class="line"></div></div>
   <div class="chart-wrap">
     <div class="chart-head">
@@ -259,16 +259,16 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
     </div>
     <canvas id="taiex-chart" height="140"></canvas>
   </div>
-
+ 
 </div>
-
+ 
 <!-- PAGE: TRACKER -->
 <div class="page" id="page-tracker">
   <div style="height:16px"></div>
   <div class="sec-head"><h2>我的追蹤清單</h2><div class="line"></div></div>
   <div class="stock-list" id="stock-list"></div>
   <div class="add-stock-btn" onclick="openAddModal()">＋ 新增追蹤股票</div>
-
+ 
   <div style="height:20px"></div>
   <div class="sec-head"><h2>個股走勢圖</h2><div class="line"></div></div>
   <div class="chart-wrap">
@@ -281,18 +281,18 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
     <canvas id="stock-chart" height="140"></canvas>
   </div>
 </div>
-
+ 
 <!-- PAGE: JOURNAL -->
 <div class="page" id="page-journal">
   <div style="height:16px"></div>
   <div class="sec-head"><h2>今日觀察記錄</h2><div class="line"></div></div>
   <div class="journal-form">
-
+ 
     <div class="form-row">
       <div class="form-label">TODAY</div>
       <input class="form-input" id="j-date" type="date">
     </div>
-
+ 
     <div class="form-row">
       <div class="auto-fetch-row">
         <div class="form-label" style="margin:0;">大盤 &amp; 個股數據</div>
@@ -303,12 +303,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         點「自動抓取」讓系統幫你填入今日數據
       </div>
     </div>
-
+ 
     <div class="form-row">
       <div class="form-label">今日觀察筆記（只需寫這個！）</div>
       <textarea class="form-input form-textarea" id="j-note" placeholder="寫下今天看到什麼、你的判斷是否正確...&#10;例如：台積電今天守住 MA20，量縮整理，感覺明天可能反彈。"></textarea>
     </div>
-
+ 
     <div class="form-row">
       <div class="form-label">今日市場情緒</div>
       <div class="mood-row">
@@ -318,18 +318,18 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="mood-btn" onclick="selectMood('unsure',this)" title="不確定">🤔</div>
       </div>
     </div>
-
+ 
     <button class="save-btn" onclick="saveJournal()">儲存今日記錄</button>
   </div>
 </div>
-
+ 
 <!-- PAGE: HISTORY -->
 <div class="page" id="page-history">
   <div style="height:16px"></div>
   <div class="sec-head"><h2>歷史觀察記錄</h2><div class="line"></div></div>
   <div class="history-list" id="history-list"></div>
 </div>
-
+ 
 <!-- MODAL -->
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
   <div class="modal">
@@ -342,9 +342,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
     </div>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
-
+ 
 <script>
 // ── STATE ──────────────────────────────────────────────
 const KEY_STOCKS = 'sw_stocks';
@@ -354,14 +354,14 @@ let selectedMood = '';
 let taiexChart = null;
 let stockChart = null;
 let currentPeriod = '1W';
-
+ 
 function load(key, def) {
   try { return JSON.parse(localStorage.getItem(key)) || def; } catch(e) { return def; }
 }
 function save(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
 }
-
+ 
 // ── TIME ──────────────────────────────────────────────
 function updateTime() {
   const now = new Date();
@@ -371,7 +371,7 @@ function updateTime() {
 }
 setInterval(updateTime, 1000);
 updateTime();
-
+ 
 // ── TABS ──────────────────────────────────────────────
 function switchTab(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -382,7 +382,7 @@ function switchTab(id) {
   if (id === 'journal') initJournalForm();
   if (id === 'tracker') renderStockList();
 }
-
+ 
 // ── TOAST ──────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -390,7 +390,7 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
-
+ 
 // ── AI SUMMARY ─────────────────────────────────────────
 async function loadAISummary(force) {
   const today = new Date().toDateString();
@@ -404,7 +404,7 @@ async function loadAISummary(force) {
     const today_str = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1200,
@@ -438,7 +438,7 @@ async function loadAISummary(force) {
     document.getElementById('ai-content').innerHTML = '<div style="color:var(--text3); font-size:13px; padding:12px 0; text-align:center;">目前無法取得即時資料<br>請稍後點「↺ 更新」重試</div>';
   }
 }
-
+ 
 function renderAISummary(text) {
   const el = document.getElementById('ai-content');
   let p = null;
@@ -453,7 +453,7 @@ function renderAISummary(text) {
   const twClass = sig === '利多' ? 'block-tw-bull' : sig === '利空' ? 'block-tw-bear' : 'block-tw-neu';
   const lampClass = sig === '利多' ? 'lamp-bull' : sig === '利空' ? 'lamp-bear' : 'lamp-neu';
   const sigIcon = sig === '利多' ? '📈' : sig === '利空' ? '📉' : '➡️';
-
+ 
   // 更新三大指數小卡
   const idxMap = [['us-dow','us-dow-chg', us.dow], ['us-sp','us-sp-chg', us.sp], ['us-nq','us-nq-chg', us.nq]];
   idxMap.forEach(([vid, cid, val]) => {
@@ -465,13 +465,13 @@ function renderAISummary(text) {
       document.getElementById(vid).textContent = val;
     }
   });
-
+ 
   const numRow = [
     us.dow ? `<span>道瓊 <b style="color:${(us.dow||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.dow}</b></span>` : '',
     us.sp  ? `<span>S&P500 <b style="color:${(us.sp||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.sp}</b></span>` : '',
     us.nq  ? `<span>Nasdaq <b style="color:${(us.nq||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.nq}</b></span>` : ''
   ].filter(Boolean).join('');
-
+ 
   el.innerHTML =
     '<div class="ai-blocks">' +
       '<div class="ai-block block-us">' +
@@ -488,7 +488,7 @@ function renderAISummary(text) {
       '</div>' +
     '</div>';
 }
-
+ 
 // ── TAIEX CHART ────────────────────────────────────────
 function genTaiexData(period) {
   const base = 44200;
@@ -505,7 +505,7 @@ function genTaiexData(period) {
   data[data.length-1] = base;
   return { labels, data };
 }
-
+ 
 function drawTaiexChart(period) {
   const { labels, data } = genTaiexData(period);
   const ctx = document.getElementById('taiex-chart').getContext('2d');
@@ -548,14 +548,14 @@ function drawTaiexChart(period) {
     }
   });
 }
-
+ 
 function switchPeriod(period, btn) {
   currentPeriod = period;
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   drawTaiexChart(period);
 }
-
+ 
 // ── STOCK LIST ─────────────────────────────────────────
 function getStocks() {
   return load(KEY_STOCKS, [
@@ -563,7 +563,7 @@ function getStocks() {
     { code: '2330', name: '台積電', price: 1025, chg: -0.49 }
   ]);
 }
-
+ 
 function renderStockList() {
   const stocks = getStocks();
   const el = document.getElementById('stock-list');
@@ -584,7 +584,7 @@ function renderStockList() {
     </div>`;
   }).join('');
 }
-
+ 
 function viewStockChart(idx) {
   const stocks = getStocks();
   const s = stocks[idx];
@@ -632,7 +632,7 @@ function viewStockChart(idx) {
     }
   });
 }
-
+ 
 // ── MODAL ──────────────────────────────────────────────
 function openAddModal() {
   document.getElementById('modal-code').value = '';
@@ -655,24 +655,24 @@ function confirmAddStock() {
   closeModalDirect();
   showToast('✓ 已新增 ' + code + ' ' + name);
 }
-
+ 
 // ── AUTO PRICE FETCH ───────────────────────────────────
 let fetchedJournalData = {};
-
+ 
 async function autoFetchPrices() {
   const statusEl = document.getElementById('j-fetch-status');
   const dataEl = document.getElementById('j-auto-data');
   statusEl.textContent = '抓取中...';
   statusEl.style.color = 'var(--gold)';
   dataEl.innerHTML = '<div style="text-align:center; color:var(--text3); font-size:12px; padding:8px 0;">正在抓取今日收盤數據...</div>';
-
+ 
   const stocks = getStocks();
   const stockList = stocks.map(s => s.code + ' ' + s.name).join('、');
-
+ 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 800,
@@ -696,7 +696,7 @@ async function autoFetchPrices() {
     dataEl.innerHTML = '<div style="text-align:center; color:var(--text3); font-size:12px; padding:8px 0;">無法抓取數據，請稍後重試</div>';
   }
 }
-
+ 
 function renderAutoFetchData(parsed, stocks) {
   const dataEl = document.getElementById('j-auto-data');
   const tx = parsed.taiex || {};
@@ -710,7 +710,7 @@ function renderAutoFetchData(parsed, stocks) {
   }
   if (tx.vol) html += '<span style="font-size:11px; color:var(--text3); font-family:var(--mono);">' + tx.vol + ' 億</span>';
   html += '</div></div>';
-
+ 
   if (parsed.stocks && parsed.stocks.length) {
     html += '<div style="font-size:10px; color:var(--text3); font-family:var(--mono); margin-bottom:6px;">追蹤個股</div>';
     html += '<div style="display:flex; flex-direction:column; gap:6px;">';
@@ -728,7 +728,7 @@ function renderAutoFetchData(parsed, stocks) {
   }
   dataEl.innerHTML = html;
 }
-
+ 
 // ── JOURNAL ────────────────────────────────────────────
 function initJournalForm() {
   const today = new Date().toISOString().split('T')[0];
@@ -738,13 +738,13 @@ function initJournalForm() {
   document.getElementById('j-fetch-status').style.color = '';
   document.getElementById('j-auto-data').innerHTML = '<div style="text-align:center; color:var(--text3); font-size:12px; padding:8px 0;">點「自動抓取」讓系統幫你填入今日數據</div>';
 }
-
+ 
 function selectMood(m, btn) {
   selectedMood = m;
   document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 }
-
+ 
 function saveJournal() {
   const date = document.getElementById('j-date').value;
   if (!date) { showToast('請選擇日期'); return; }
@@ -774,7 +774,7 @@ function saveJournal() {
   showToast('✓ 記錄已儲存');
   document.getElementById('j-note').value = '';
 }
-
+ 
 // ── HISTORY ────────────────────────────────────────────
 function renderHistory() {
   const journals = load(KEY_JOURNALS, {});
@@ -807,7 +807,7 @@ function renderHistory() {
     </div>`;
   }).join('');
 }
-
+ 
 // ── INIT ──────────────────────────────────────────────
 window.addEventListener('load', () => {
   renderStockList();
@@ -818,3 +818,4 @@ window.addEventListener('load', () => {
 </script>
 </body>
 </html>
+ 
