@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>股股股 · StockWatch</title>
+<title>股觀 · StockWatch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -195,7 +195,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
  
 <nav class="nav">
   <div class="nav-top">
-    <div class="nav-logo">股股股 · StockWatch</div>
+    <div class="nav-logo">股觀 · StockWatch</div>
     <div class="nav-time" id="nav-time">--:--</div>
   </div>
   <div class="nav-tabs">
@@ -244,7 +244,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
     </div>
   </div>
  
-  <div class="sec-head"><h2>大盤走勢（模擬）</h2><div class="line"></div></div>
+  <div class="sec-head"><h2>大盤走勢</h2><div class="line"></div></div>
   <div class="chart-wrap">
     <div class="chart-head">
       <div>
@@ -496,19 +496,22 @@ async function drawTaiexChart(period) {
   document.getElementById('taiex-display').textContent = '載入中...';
   try {
     if (!taiexRawLines) {
-      const url = 'https://stooq.com/q/d/l/?s=%5Etaiex&i=d';
-      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+      // 透過 allorigins 抓 stooq 台股加權指數歷史數據
+      const url = 'https://stooq.com/q/d/l/?s=%5Etaiex&i=d&l=90';
+      const proxy = 'https://corsproxy.io/?' + encodeURIComponent(url);
       const r = await fetch(proxy);
-      const d = await r.json();
-      taiexRawLines = d.contents.trim().split('\n').slice(1).filter(l => l.trim());
+      const text = await r.text();
+      taiexRawLines = text.trim().split('\n').slice(1).filter(l => l.trim() && !l.startsWith('Date'));
     }
     const days = period === '1W' ? 5 : period === '1M' ? 20 : 60;
     const recent = taiexRawLines.slice(-days);
+    if (recent.length === 0) throw new Error('no data');
     const labels = recent.map(l => {
       const dt = l.split(',')[0];
       return parseInt(dt.slice(5,7)) + '/' + parseInt(dt.slice(8,10));
     });
-    const data = recent.map(l => parseFloat(l.split(',')[4]));
+    const data = recent.map(l => parseFloat(l.split(',')[4])).filter(v => !isNaN(v));
+    if (data.length === 0) throw new Error('no valid data');
     const last = data[data.length-1];
     const isUp = last >= data[0];
     const color = isUp ? '#3ecf8e' : '#f16063';
@@ -544,7 +547,10 @@ async function drawTaiexChart(period) {
       }
     });
   } catch(e) {
-    document.getElementById('taiex-display').textContent = '無法載入';
+    document.getElementById('taiex-display').textContent = '暫無數據';
+    // 載入失敗時顯示空白圖表不報錯
+    const ctx = document.getElementById('taiex-chart').getContext('2d');
+    if (taiexChart) taiexChart.destroy();
   }
 }
  
