@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>股票觀測器 · StockWatch</title>
+<title>股觀 · StockWatch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -195,7 +195,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
  
 <nav class="nav">
   <div class="nav-top">
-    <div class="nav-logo">股票觀測器 · StockWatch</div>
+    <div class="nav-logo">股觀 · StockWatch</div>
     <div class="nav-time" id="nav-time">--:--</div>
   </div>
   <div class="nav-tabs">
@@ -392,6 +392,19 @@ function showToast(msg) {
 }
  
 // ── AI SUMMARY ─────────────────────────────────────────
+const WORKER_URL = 'https://claude-proxy.mmiachenn.workers.dev/';
+const API_KEY = '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
+';
+ 
+async function callClaude(payload) {
+  const resp = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ apiKey: API_KEY }, payload))
+  });
+  return await resp.json();
+}
+ 
 async function loadAISummary(force) {
   const today = new Date().toDateString();
   const cached = load(KEY_AI_CACHE, null);
@@ -402,35 +415,14 @@ async function loadAISummary(force) {
   document.getElementById('ai-content').innerHTML = '<div class="ai-loading"><div class="ai-loading-dots"><span>●</span><span>●</span><span>●</span></div><span>AI 正在幫你分析今日市場...</span></div>';
   try {
     const today_str = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
-    const resp = await fetch('https://claude-proxy.mmiachenn.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apiKey: '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',
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
-        system: `你是一位專門幫台股投資新手看懂市場的朋友，說話像朋友聊天，超級白話，不用金融術語。
-請用繁體中文，只輸出以下JSON格式，不要任何其他文字：
-{
-  "us": {
-    "title": "昨晚美股一句話摘要（15字以內，白話）",
-    "dow": "+0.36%",
-    "sp": "+0.02%",
-    "nq": "+0.07%",
-    "reason": "為什麼漲跌的白話原因，用生活比喻，例如：大家在等聯準會的消息，所以都不敢亂動，像在等老師公布考試成績一樣。（40字以內）"
-  },
-  "tw": {
-    "signal": "利多或利空或中性（三選一）",
-    "title": "今天台股開盤預測（15字以內，白話）",
-    "watch": "新手今天開盤要觀察什麼？給一個超具體的觀察重點，例如：看台積電開盤有沒有站上昨天收盤價，有的話代表外資回來了。（50字以內）"
-  }
-}`,
-        messages: [{ role: 'user', content: '今天是' + today_str + '，請搜尋最新美股昨日收盤數據，用指定JSON格式回覆。' }]
-      })
+    const data = await callClaude({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 800,
+      system: '你是台股投資新手的朋友，說話超級白話。只輸出以下JSON，不要其他任何文字：{"us":{"title":"昨晚美股一句話（15字內）","dow":"+0.36%","sp":"+0.02%","nq":"+0.07%","reason":"白話原因（40字內）"},"tw":{"signal":"利多或利空或中性","title":"台股今日預測（15字內）","watch":"新手觀察重點（50字內）"}}',
+      messages: [{ role: 'user', content: '今天是' + today_str + '，請根據你的知識，給出最新美股收盤摘要和對台股的影響分析。' }]
     });
-    const data = await resp.json();
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
-    if (text) {
+    if (text && text.trim()) {
       save(KEY_AI_CACHE, { date: today, data: text });
       renderAISummary(text);
     } else { throw new Error('empty'); }
@@ -453,25 +445,20 @@ function renderAISummary(text) {
   const twClass = sig === '利多' ? 'block-tw-bull' : sig === '利空' ? 'block-tw-bear' : 'block-tw-neu';
   const lampClass = sig === '利多' ? 'lamp-bull' : sig === '利空' ? 'lamp-bear' : 'lamp-neu';
   const sigIcon = sig === '利多' ? '📈' : sig === '利空' ? '📉' : '➡️';
- 
-  // 更新三大指數小卡
   const idxMap = [['us-dow','us-dow-chg', us.dow], ['us-sp','us-sp-chg', us.sp], ['us-nq','us-nq-chg', us.nq]];
   idxMap.forEach(([vid, cid, val]) => {
     if (val) {
       const el2 = document.getElementById(cid);
       const isUp = val.startsWith('+') || (!val.startsWith('-') && parseFloat(val) >= 0);
-      el2.textContent = val;
-      el2.className = 'us-chg ' + (isUp ? 'up' : 'down');
+      el2.textContent = val; el2.className = 'us-chg ' + (isUp ? 'up' : 'down');
       document.getElementById(vid).textContent = val;
     }
   });
- 
   const numRow = [
-    us.dow ? `<span>道瓊 <b style="color:${(us.dow||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.dow}</b></span>` : '',
-    us.sp  ? `<span>S&P500 <b style="color:${(us.sp||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.sp}</b></span>` : '',
-    us.nq  ? `<span>Nasdaq <b style="color:${(us.nq||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.nq}</b></span>` : ''
+    us.dow ? '<span>道瓊 <b style="color:' + ((us.dow||'').startsWith('-')?'var(--down)':'var(--up)') + '">' + us.dow + '</b></span>' : '',
+    us.sp  ? '<span>S&P500 <b style="color:' + ((us.sp||'').startsWith('-')?'var(--down)':'var(--up)') + '">' + us.sp + '</b></span>' : '',
+    us.nq  ? '<span>Nasdaq <b style="color:' + ((us.nq||'').startsWith('-')?'var(--down)':'var(--up)') + '">' + us.nq + '</b></span>' : ''
   ].filter(Boolean).join('');
- 
   el.innerHTML =
     '<div class="ai-blocks">' +
       '<div class="ai-block block-us">' +
@@ -670,18 +657,12 @@ async function autoFetchPrices() {
   const stockList = stocks.map(s => s.code + ' ' + s.name).join('、');
  
   try {
-    const resp = await fetch('https://claude-proxy.mmiachenn.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apiKey: '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',
-        model: 'claude-sonnet-4-6',
-        max_tokens: 800,
-        system: '你是股票數據助手。請搜尋台股今日或最新收盤數據，只輸出JSON，不要其他文字。格式：{"taiex":{"price":44200,"chg":156,"chg_pct":0.35,"vol":3850},"stocks":[{"code":"0050","price":210.5,"chg_pct":0.72},{"code":"2330","price":1025,"chg_pct":-0.49}]}',
-        messages: [{ role: 'user', content: '請搜尋今日台股加權指數收盤點數、漲跌點、成交金額（億元），以及以下個股的最新收盤價與漲跌幅：' + stockList + '。用指定JSON格式回覆。' }]
-      })
+    const data = await callClaude({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 800,
+      system: '你是股票數據助手。只輸出JSON，不要其他文字。格式：{"taiex":{"price":44200,"chg":156,"chg_pct":0.35,"vol":3850},"stocks":[{"code":"0050","price":210.5,"chg_pct":0.72},{"code":"2330","price":1025,"chg_pct":-0.49}]}',
+      messages: [{ role: 'user', content: '請給出台股今日加權指數收盤點數、漲跌點、成交金額（億元），以及以下個股的最新收盤價與漲跌幅：' + stockList + '。用指定JSON格式回覆。' }]
     });
-    const data = await resp.json();
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
     const m = text.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('no json');
