@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>股觀 · StockWatch</title>
+<title>股票觀察器 · StockWatch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -195,7 +195,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
  
 <nav class="nav">
   <div class="nav-top">
-    <div class="nav-logo">股觀 · StockWatch</div>
+    <div class="nav-logo">股票觀察器 · StockWatch</div>
     <div class="nav-time" id="nav-time">--:--</div>
   </div>
   <div class="nav-tabs">
@@ -404,9 +404,9 @@ async function loadAISummary(force) {
     const today_str = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1200,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: `你是一位專門幫台股投資新手看懂市場的朋友，說話像朋友聊天，超級白話，不用金融術語。
@@ -672,9 +672,9 @@ async function autoFetchPrices() {
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 800,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: '你是股票數據助手。請搜尋台股今日或最新收盤數據，只輸出JSON，不要其他文字。格式：{"taiex":{"price":44200,"chg":156,"chg_pct":0.35,"vol":3850},"stocks":[{"code":"0050","price":210.5,"chg_pct":0.72},{"code":"2330","price":1025,"chg_pct":-0.49}]}',
@@ -818,4 +818,3 @@ window.addEventListener('load', () => {
 </script>
 </body>
 </html>
- 
