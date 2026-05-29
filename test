@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API 測試</title>
+<style>
+body { background: #0a0c10; color: #e8eaf0; font-family: sans-serif; padding: 20px; }
+button { background: #c9a84c; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; color: #000; margin-bottom: 16px; }
+pre { background: #111318; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; font-size: 12px; white-space: pre-wrap; word-break: break-all; min-height: 100px; }
+input { width: 100%; background: #181b22; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; color: #e8eaf0; font-size: 13px; margin-bottom: 12px; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<h2 style="color:#f0c96e; margin-bottom:16px;">API 連線測試</h2>
+<input type="text" id="apikey" placeholder="貼上你的 API Key (sk-ant-api03-...)" />
+<button onclick="testAPI()">測試連線</button>
+<pre id="result">點上方按鈕開始測試...</pre>
+ 
+<script>
+async function testAPI() {
+  const key = document.getElementById('apikey').value.trim();
+  const result = document.getElementById('result');
+  if (!key) { result.textContent = '請先貼上 API Key'; return; }
+  result.textContent = '測試中...';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 100,
+        messages: [{ role: 'user', content: '說「連線成功！」三個字就好' }]
+      })
+    });
+    const data = await resp.json();
+    result.textContent = JSON.stringify(data, null, 2);
+  } catch(e) {
+    result.textContent = '錯誤：' + e.message;
+  }
+}
+</script>
+</body>
+</html>
