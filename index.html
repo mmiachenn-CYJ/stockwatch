@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>股觀 · StockWatch</title>
+<title>股股股 · StockWatch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -195,7 +195,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
  
 <nav class="nav">
   <div class="nav-top">
-    <div class="nav-logo">股觀 · StockWatch</div>
+    <div class="nav-logo">股股股 · StockWatch</div>
     <div class="nav-time" id="nav-time">--:--</div>
   </div>
   <div class="nav-tabs">
@@ -496,12 +496,13 @@ async function drawTaiexChart(period) {
   document.getElementById('taiex-display').textContent = '載入中...';
   try {
     if (!taiexRawLines) {
-      // 透過 allorigins 抓 stooq 台股加權指數歷史數據
-      const url = 'https://stooq.com/q/d/l/?s=%5Etaiex&i=d&l=90';
-      const proxy = 'https://corsproxy.io/?' + encodeURIComponent(url);
-      const r = await fetch(proxy);
-      const text = await r.text();
-      taiexRawLines = text.trim().split('\n').slice(1).filter(l => l.trim() && !l.startsWith('Date'));
+      const resp = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'taiex' })
+      });
+      const d = await resp.json();
+      taiexRawLines = d.csv.trim().split('\n').slice(1).filter(l => l.trim() && !l.startsWith('Date'));
     }
     const days = period === '1W' ? 5 : period === '1M' ? 20 : 60;
     const recent = taiexRawLines.slice(-days);
@@ -548,7 +549,6 @@ async function drawTaiexChart(period) {
     });
   } catch(e) {
     document.getElementById('taiex-display').textContent = '暫無數據';
-    // 載入失敗時顯示空白圖表不報錯
     const ctx = document.getElementById('taiex-chart').getContext('2d');
     if (taiexChart) taiexChart.destroy();
   }
