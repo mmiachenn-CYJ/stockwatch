@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>股票觀測器 · StockWatch</title>
+<title>股票觀察器 · StockWatch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -195,7 +195,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
  
 <nav class="nav">
   <div class="nav-top">
-    <div class="nav-logo">股票觀測器 · StockWatch</div>
+    <div class="nav-logo">股票觀察器 · StockWatch</div>
     <div class="nav-time" id="nav-time">--:--</div>
   </div>
   <div class="nav-tabs">
@@ -443,9 +443,34 @@ function renderAISummary(text) {
   const el = document.getElementById('ai-content');
   let p = null;
   try { const m = text.match(/\{[\s\S]*\}/); if (m) p = JSON.parse(m[0]); } catch(e) {}
+ 
+  // JSON 解析失敗時，從純文字裡萃取數據自行組裝
   if (!p) {
-    el.innerHTML = '<div style="font-size:13px;color:var(--text2);line-height:1.8;padding:4px 0;">' + text.replace(/</g,'&lt;') + '</div>';
-    return;
+    const dowM = text.match(/道瓊[^\d]*([\+\-]?\d+\.?\d*%)/);
+    const spM  = text.match(/(?:標普|S&P)[^\d]*([\+\-]?\d+\.?\d*%)/);
+    const nqM  = text.match(/(?:那斯達克|Nasdaq)[^\d]*([\+\-]?\d+\.?\d*%)/);
+    const upKw = ['上漲','收紅','新高','漲'];
+    const dnKw = ['下跌','收黑','跌'];
+    const isUp = upKw.some(w => text.includes(w));
+    const isDn = dnKw.some(w => text.includes(w));
+    p = {
+      us: {
+        title: isUp ? '美股昨晚全面上漲 📈' : isDn ? '美股昨晚收跌 📉' : '美股昨晚小幅整理',
+        dow: dowM ? dowM[1] : '--',
+        sp:  spM  ? spM[1]  : '--',
+        nq:  nqM  ? nqM[1]  : '--',
+        reason: text.length > 20 ? text.slice(0, 80) + '...' : text
+      },
+      tw: {
+        signal: isUp ? '利多' : isDn ? '利空' : '中性',
+        title: isUp ? '台股今日開盤偏樂觀' : isDn ? '台股今日開盤偏保守' : '台股今日方向不明',
+        watch: isUp
+          ? '注意台積電開盤能否站穩，若同步上漲代表外資跟進，可正常追蹤。'
+          : isDn
+          ? '注意台積電開盤有沒有跟跌，若跌幅放大要小心，先觀察不急著進場。'
+          : '今天先觀察大盤方向，等開盤 30 分鐘後再判斷趨勢。'
+      }
+    };
   }
   const us = p.us || {};
   const tw = p.tw || {};
@@ -818,3 +843,4 @@ window.addEventListener('load', () => {
 </script>
 </body>
 </html>
+ 
