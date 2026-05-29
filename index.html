@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>股票觀察家 · StockWatch</title>
+<title>股觀 · StockWatch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
@@ -195,7 +195,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
  
 <nav class="nav">
   <div class="nav-top">
-    <div class="nav-logo">股票觀察家 · StockWatch</div>
+    <div class="nav-logo">股觀 · StockWatch</div>
     <div class="nav-time" id="nav-time">--:--</div>
   </div>
   <div class="nav-tabs">
@@ -396,122 +396,133 @@ async function loadAISummary(force) {
   const today = new Date().toDateString();
   const cached = load(KEY_AI_CACHE, null);
   if (!force && cached && cached.date === today) {
-    renderAISummary(cached.data);
+    renderSummary(cached.data);
     return;
   }
-  document.getElementById('ai-content').innerHTML = '<div class="ai-loading"><div class="ai-loading-dots"><span>●</span><span>●</span><span>●</span></div><span>AI 正在幫你分析今日市場...</span></div>';
+  document.getElementById('ai-content').innerHTML = '<div class="ai-loading"><div class="ai-loading-dots"><span>●</span><span>●</span><span>●</span></div><span>第一步：抓取美股數據...</span></div>';
+ 
   try {
-    const today_str = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
+    // ── 第一步：用 stooq 抓真實美股數字 ──
+    async function fetchStooq(sym) {
+      const url = 'https://stooq.com/q/l/?s=' + sym + '&f=sd2t2ohlcv&h&e=csv';
+      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+      const r = await fetch(proxy);
+      const d = await r.json();
+      const lines = d.contents.trim().split('\n');
+      const row = lines[1].split(',');
+      const close = parseFloat(row[4]);
+      const open  = parseFloat(row[2]);
+      const chgPct = ((close - open) / open * 100).toFixed(2);
+      const chgStr = (parseFloat(chgPct) >= 0 ? '+' : '') + chgPct + '%';
+      return { price: close.toLocaleString(), chg: chgStr, chgNum: parseFloat(chgPct) };
+    }
+ 
+    const [dow, sp, nq] = await Promise.all([
+      fetchStooq('^dji'), fetchStooq('^spx'), fetchStooq('^ndq')
+    ]);
+ 
+    document.getElementById('ai-content').innerHTML = '<div class="ai-loading"><div class="ai-loading-dots"><span>●</span><span>●</span><span>●</span></div><span>第二步：AI 幫你解讀數據...</span></div>';
+ 
+    // ── 第二步：把真實數字餵給 Claude，要求輸出 JSON ──
+    const marketInfo = `昨日美股收盤數據：
+道瓊工業指數：${dow.price}（${dow.chg}）
+S&P500：${sp.price}（${sp.chg}）
+Nasdaq：${nq.price}（${nq.chg}）`;
+ 
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': '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', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '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',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        system: `你是一位專門幫台股投資新手看懂市場的朋友，說話像朋友聊天，超級白話，不用金融術語。
-請用繁體中文，只輸出以下JSON格式，不要任何其他文字：
-{
-  "us": {
-    "title": "昨晚美股一句話摘要（15字以內，白話）",
-    "dow": "+0.36%",
-    "sp": "+0.02%",
-    "nq": "+0.07%",
-    "reason": "為什麼漲跌的白話原因，用生活比喻，例如：大家在等聯準會的消息，所以都不敢亂動，像在等老師公布考試成績一樣。（40字以內）"
-  },
-  "tw": {
-    "signal": "利多或利空或中性（三選一）",
-    "title": "今天台股開盤預測（15字以內，白話）",
-    "watch": "新手今天開盤要觀察什麼？給一個超具體的觀察重點，例如：看台積電開盤有沒有站上昨天收盤價，有的話代表外資回來了。（50字以內）"
-  }
-}`,
-        messages: [{ role: 'user', content: '今天是' + today_str + '，請搜尋最新美股昨日收盤數據，用指定JSON格式回覆。' }]
+        max_tokens: 600,
+        system: '你是台股投資新手的朋友，說話超級白話。根據用戶提供的美股數據，輸出以下JSON，不要輸出其他任何文字：{"usTitle":"一句白話總結今天美股（15字內）","usReason":"用生活比喻解釋漲跌原因（40字內）","signal":"利多或利空或中性（三選一）","twTitle":"對台股今日開盤的白話預測（15字內）","twWatch":"新手今天具體要觀察什麼（50字內）"}',
+        messages: [{ role: 'user', content: marketInfo }]
       })
     });
-    const data = await resp.json();
-    const text = (data.content || [])
-      .filter(b => b.type === 'text' && b.text && b.text.trim().length > 5)
-      .map(b => b.text).join(' ');
-    if (text && text.trim().length > 5) {
-      save(KEY_AI_CACHE, { date: today, data: text });
-      renderAISummary(text);
-    } else { throw new Error('empty'); }
+ 
+    const apiData = await resp.json();
+    const rawText = (apiData.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+ 
+    let analysis = null;
+    try {
+      const m = rawText.match(/\{[\s\S]*\}/);
+      if (m) analysis = JSON.parse(m[0]);
+    } catch(e) {}
+ 
+    const allUp = dow.chgNum >= 0 && sp.chgNum >= 0 && nq.chgNum >= 0;
+    const allDn = dow.chgNum < 0 && sp.chgNum < 0 && nq.chgNum < 0;
+ 
+    const data = {
+      dow: dow.chg, sp: sp.chg, nq: nq.chg,
+      dowP: dow.price, spP: sp.price, nqP: nq.price,
+      allUp, allDn,
+      usTitle:  analysis ? analysis.usTitle  : (allUp ? '美股昨晚全面上漲 📈' : allDn ? '美股昨晚全面收跌 📉' : '美股昨晚漲跌互見'),
+      usReason: analysis ? analysis.usReason : (allUp ? '市場氣氛不錯，投資人信心偏正面。' : allDn ? '市場偏謹慎，投資人獲利了結。' : '市場方向不明確，觀望氣氛濃厚。'),
+      signal:   analysis ? analysis.signal   : (allUp ? '利多' : allDn ? '利空' : '中性'),
+      twTitle:  analysis ? analysis.twTitle  : (allUp ? '台股今日開盤可望偏多' : allDn ? '台股今日開盤偏謹慎' : '台股今日方向待觀察'),
+      twWatch:  analysis ? analysis.twWatch  : (allUp ? '觀察台積電開盤是否跟漲，量能若放大更有信心。' : allDn ? '台積電若跟跌超過 1% 先觀望，不急著進場。' : '等開盤 30 分鐘後再判斷方向。')
+    };
+ 
+    save(KEY_AI_CACHE, { date: today, data });
+    renderSummary(data);
+ 
   } catch(e) {
-    document.getElementById('ai-content').innerHTML = '<div style="color:var(--text3); font-size:13px; padding:12px 0; text-align:center;">目前無法取得即時資料<br>請稍後點「↺ 更新」重試</div>';
+    document.getElementById('ai-content').innerHTML =
+      '<div style="color:var(--text3);font-size:12px;padding:12px 0;line-height:1.8;text-align:center;">無法取得數據<br>請點「↺ 更新」重試</div>';
   }
 }
  
-function renderAISummary(text) {
+function renderSummary(data) {
   const el = document.getElementById('ai-content');
-  let p = null;
-  try { const m = text.match(/\{[\s\S]*\}/); if (m) p = JSON.parse(m[0]); } catch(e) {}
- 
-  // JSON 解析失敗時，從純文字裡萃取數據自行組裝
-  if (!p) {
-    const dowM = text.match(/道瓊[^\d]*([\+\-]?\d+\.?\d*%)/);
-    const spM  = text.match(/(?:標普|S&P)[^\d]*([\+\-]?\d+\.?\d*%)/);
-    const nqM  = text.match(/(?:那斯達克|Nasdaq)[^\d]*([\+\-]?\d+\.?\d*%)/);
-    const upKw = ['上漲','收紅','新高','漲'];
-    const dnKw = ['下跌','收黑','跌'];
-    const isUp = upKw.some(w => text.includes(w));
-    const isDn = dnKw.some(w => text.includes(w));
-    p = {
-      us: {
-        title: isUp ? '美股昨晚全面上漲 📈' : isDn ? '美股昨晚收跌 📉' : '美股昨晚小幅整理',
-        dow: dowM ? dowM[1] : '--',
-        sp:  spM  ? spM[1]  : '--',
-        nq:  nqM  ? nqM[1]  : '--',
-        reason: text.length > 20 ? text.slice(0, 80) + '...' : text
-      },
-      tw: {
-        signal: isUp ? '利多' : isDn ? '利空' : '中性',
-        title: isUp ? '台股今日開盤偏樂觀' : isDn ? '台股今日開盤偏保守' : '台股今日方向不明',
-        watch: isUp
-          ? '注意台積電開盤能否站穩，若同步上漲代表外資跟進，可正常追蹤。'
-          : isDn
-          ? '注意台積電開盤有沒有跟跌，若跌幅放大要小心，先觀察不急著進場。'
-          : '今天先觀察大盤方向，等開盤 30 分鐘後再判斷趨勢。'
-      }
-    };
+  if (!data || !data.dow) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px 0;text-align:center;">點「↺ 更新」載入市場數據</div>';
+    return;
   }
-  const us = p.us || {};
-  const tw = p.tw || {};
-  const sig = tw.signal || '中性';
+  const sig = data.signal || (data.allUp ? '利多' : data.allDn ? '利空' : '中性');
   const twClass = sig === '利多' ? 'block-tw-bull' : sig === '利空' ? 'block-tw-bear' : 'block-tw-neu';
   const lampClass = sig === '利多' ? 'lamp-bull' : sig === '利空' ? 'lamp-bear' : 'lamp-neu';
   const sigIcon = sig === '利多' ? '📈' : sig === '利空' ? '📉' : '➡️';
  
+  const usTitle  = data.usTitle  || (data.allUp ? '美股昨晚全面上漲 📈' : data.allDn ? '美股昨晚全面收跌 📉' : '美股昨晚漲跌互見');
+  const usReason = data.usReason || '';
+  const twTitle  = data.twTitle  || (data.allUp ? '台股今日開盤可望偏多' : data.allDn ? '台股今日開盤偏謹慎' : '台股今日方向待觀察');
+  const twWatch  = data.twWatch  || '';
+ 
   // 更新三大指數小卡
-  const idxMap = [['us-dow','us-dow-chg', us.dow], ['us-sp','us-sp-chg', us.sp], ['us-nq','us-nq-chg', us.nq]];
-  idxMap.forEach(([vid, cid, val]) => {
-    if (val) {
-      const el2 = document.getElementById(cid);
-      const isUp = val.startsWith('+') || (!val.startsWith('-') && parseFloat(val) >= 0);
-      el2.textContent = val;
-      el2.className = 'us-chg ' + (isUp ? 'up' : 'down');
-      document.getElementById(vid).textContent = val;
-    }
+  [['us-dow','us-dow-chg',data.dow,data.dowP],
+   ['us-sp','us-sp-chg',data.sp,data.spP],
+   ['us-nq','us-nq-chg',data.nq,data.nqP]].forEach(([vid,cid,chg,price]) => {
+    const isUp = chg && !chg.startsWith('-');
+    document.getElementById(vid).textContent = price || '--';
+    const ce = document.getElementById(cid);
+    ce.textContent = chg || '--';
+    ce.className = 'us-chg ' + (chg ? (isUp ? 'up' : 'down') : '');
   });
  
   const numRow = [
-    us.dow ? `<span>道瓊 <b style="color:${(us.dow||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.dow}</b></span>` : '',
-    us.sp  ? `<span>S&P500 <b style="color:${(us.sp||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.sp}</b></span>` : '',
-    us.nq  ? `<span>Nasdaq <b style="color:${(us.nq||'').startsWith('-')?'var(--down)':'var(--up)'}">${us.nq}</b></span>` : ''
-  ].filter(Boolean).join('');
+    `<span>道瓊 <b style="color:${data.dow&&!data.dow.startsWith('-')?'var(--up)':'var(--down)'}">${data.dow}</b></span>`,
+    `<span>S&P500 <b style="color:${data.sp&&!data.sp.startsWith('-')?'var(--up)':'var(--down)'}">${data.sp}</b></span>`,
+    `<span>Nasdaq <b style="color:${data.nq&&!data.nq.startsWith('-')?'var(--up)':'var(--down)'}">${data.nq}</b></span>`
+  ].join('');
  
   el.innerHTML =
     '<div class="ai-blocks">' +
       '<div class="ai-block block-us">' +
         '<div class="ai-block-label">昨日美股 · YESTERDAY US MARKET</div>' +
-        '<div class="ai-block-title">' + (us.title||'') + '</div>' +
+        '<div class="ai-block-title">' + usTitle + '</div>' +
         '<div class="ai-numbers">' + numRow + '</div>' +
-        '<div class="ai-block-plain">' + (us.reason||'') + '</div>' +
+        '<div class="ai-block-plain">' + usReason + '</div>' +
       '</div>' +
       '<div class="ai-block ' + twClass + '">' +
         '<div class="ai-block-label">今日台股預測 · TODAY TW MARKET</div>' +
         '<div class="signal-lamp ' + lampClass + '"><div class="lamp-dot"></div>' + sigIcon + ' ' + sig + '</div>' +
-        '<div class="ai-block-title">' + (tw.title||'') + '</div>' +
-        '<div class="ai-block-plain"><b style="opacity:0.7;">今天觀察重點：</b>' + (tw.watch||'') + '</div>' +
+        '<div class="ai-block-title">' + twTitle + '</div>' +
+        '<div class="ai-block-plain"><b style="opacity:0.7;">今天觀察重點：</b>' + twWatch + '</div>' +
       '</div>' +
     '</div>';
 }
