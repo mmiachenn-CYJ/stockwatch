@@ -644,7 +644,17 @@ async function viewStockChart(idx) {
     labels = recent.map(c => parseInt(c[0].slice(5,7)) + '/' + parseInt(c[0].slice(8,10)));
     data = recent.map(c => parseFloat(c[4]));
     if (data.length === 0) throw new Error('no valid data');
-    document.getElementById('stock-chart-sub').textContent = data[data.length-1].toLocaleString() + ' 元';
+
+    // 過濾異常值：移除超過中位數 ±50% 的數據點
+    const sorted = [...data].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const filtered = data.map((v, i) => {
+      if (v > median * 1.5 || v < median * 0.5) return null;
+      return v;
+    });
+    data = filtered;
+
+    document.getElementById('stock-chart-sub').textContent = (data.filter(v=>v!==null).pop() || 0).toLocaleString() + ' 元';
   } catch(e) {
     document.getElementById('stock-chart-sub').textContent = '暫無數據';
     const ctx = document.getElementById('stock-chart').getContext('2d');
