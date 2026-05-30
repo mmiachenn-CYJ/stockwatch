@@ -278,7 +278,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="chart-sub" id="stock-chart-sub">點選上方個股卡片</div>
       </div>
     </div>
-    <canvas id="stock-chart" height="140"></canvas>
+    <canvas id="stock-chart" height="90"></canvas>
   </div>
 </div>
  
@@ -350,6 +350,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 const KEY_STOCKS = 'sw_stocks';
 const KEY_JOURNALS = 'sw_journals';
 const KEY_AI_CACHE = 'sw_ai_cache';
+const WORKER_URL = 'https://claude-proxy.mmiachenn.workers.dev/';
 let selectedMood = '';
 let taiexChart = null;
 let stockChart = null;
@@ -499,7 +500,7 @@ async function drawTaiexChart(period) {
       const resp = await fetch(WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'taiex' })
+        body: JSON.stringify({ type: 'stooq', sym: '^taiex' })
       });
       const d = await resp.json();
       taiexRawLines = d.csv.trim().split('\n').slice(1).filter(l => l.trim() && !l.startsWith('Date'));
@@ -590,22 +591,37 @@ function renderStockList() {
   }).join('');
 }
  
-function viewStockChart(idx) {
+async function viewStockChart(idx) {
   const stocks = getStocks();
   const s = stocks[idx];
   document.getElementById('stock-chart-title').textContent = s.code + ' ' + s.name;
-  document.getElementById('stock-chart-sub').textContent = s.price.toLocaleString() + ' 元';
-  const base = s.price;
-  const labels = [], data = [];
-  let v = base * 0.95;
-  for (let i = 20; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    if (d.getDay() === 0 || d.getDay() === 6) continue;
-    labels.push((d.getMonth()+1) + '/' + d.getDate());
-    v += (Math.random() - 0.46) * (base * 0.008);
-    data.push(parseFloat(v.toFixed(1)));
+  document.getElementById('stock-chart-sub').textContent = '載入中...';
+
+  let labels = [], data = [];
+  try {
+    const sym = s.code.toLowerCase() + '.tw';
+    const resp = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'stooq', sym })
+    });
+    const d = await resp.json();
+    const lines = d.csv.trim().split('\n').slice(1).filter(l => l.trim() && !l.startsWith('Date'));
+    const recent = lines.slice(-22);
+    if (recent.length === 0) throw new Error('no data');
+    labels = recent.map(l => {
+      const dt = l.split(',')[0];
+      return parseInt(dt.slice(5,7)) + '/' + parseInt(dt.slice(8,10));
+    });
+    data = recent.map(l => parseFloat(l.split(',')[4])).filter(v => !isNaN(v));
+    if (data.length === 0) throw new Error('no valid data');
+    document.getElementById('stock-chart-sub').textContent = data[data.length-1].toLocaleString() + ' 元';
+  } catch(e) {
+    document.getElementById('stock-chart-sub').textContent = '暫無數據';
+    const ctx = document.getElementById('stock-chart').getContext('2d');
+    if (stockChart) stockChart.destroy();
+    return;
   }
-  data[data.length-1] = base;
   const ctx = document.getElementById('stock-chart').getContext('2d');
   const isUp = data[data.length-1] >= data[0];
   const color = isUp ? '#3ecf8e' : '#f16063';
@@ -616,7 +632,7 @@ function viewStockChart(idx) {
       labels, datasets: [{
         data, borderColor: color, borderWidth: 1.5, tension: 0.3, fill: true,
         backgroundColor: (ctx2) => {
-          const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, 140);
+          const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, 90);
           g.addColorStop(0, isUp ? 'rgba(62,207,142,0.15)' : 'rgba(241,96,99,0.15)');
           g.addColorStop(1, 'rgba(0,0,0,0)');
           return g;
