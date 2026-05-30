@@ -490,29 +490,43 @@ function renderAISummary(text) {
     '</div>';
 }
  
+// ── DATA HELPERS ───────────────────────────────────────
+// Worker 回傳格式：{ csv: "Date,Open,High,Low,Close,Volume\n2026-05-04,...\n..." }
+// 只取以 YYYY-MM-DD 開頭的資料列，過濾掉表頭與錯誤訊息（例如 stooq apikey 提示）
+function parseCsvRows(csv) {
+  if (!csv || typeof csv !== 'string') return [];
+  return csv.trim().split('\n')
+    .map(l => l.trim())
+    .filter(l => /^\d{4}-\d{2}-\d{2},/.test(l))
+    .map(l => l.split(','))
+    .filter(c => c.length >= 5 && !isNaN(parseFloat(c[4])));
+}
+
+async function fetchWorkerRows(sym) {
+  const resp = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'stooq', sym })
+  });
+  const d = await resp.json();
+  return parseCsvRows(d.csv);
+}
+
 // ── TAIEX CHART ────────────────────────────────────────
-let taiexRawLines = null;
- 
+let taiexRawRows = null;
+
 async function drawTaiexChart(period) {
   document.getElementById('taiex-display').textContent = '載入中...';
   try {
-    if (!taiexRawLines) {
-      const resp = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'stooq', sym: '^taiex' })
-      });
-      const d = await resp.json();
-      taiexRawLines = d.csv.trim().split('\n').slice(1).filter(l => l.trim() && !l.startsWith('Date'));
+    if (!taiexRawRows || !taiexRawRows.length) {
+      taiexRawRows = await fetchWorkerRows('^taiex');
     }
+    if (!taiexRawRows.length) throw new Error('no data');
     const days = period === '1W' ? 5 : period === '1M' ? 20 : 60;
-    const recent = taiexRawLines.slice(-days);
+    const recent = taiexRawRows.slice(-days);
     if (recent.length === 0) throw new Error('no data');
-    const labels = recent.map(l => {
-      const dt = l.split(',')[0];
-      return parseInt(dt.slice(5,7)) + '/' + parseInt(dt.slice(8,10));
-    });
-    const data = recent.map(l => parseFloat(l.split(',')[4])).filter(v => !isNaN(v));
+    const labels = recent.map(c => parseInt(c[0].slice(5,7)) + '/' + parseInt(c[0].slice(8,10)));
+    const data = recent.map(c => parseFloat(c[4]));
     if (data.length === 0) throw new Error('no valid data');
     const last = data[data.length-1];
     const isUp = last >= data[0];
@@ -599,21 +613,11 @@ async function viewStockChart(idx) {
 
   let labels = [], data = [];
   try {
-    const sym = s.code.toLowerCase() + '.tw';
-    const resp = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'stooq', sym })
-    });
-    const d = await resp.json();
-    const lines = d.csv.trim().split('\n').slice(1).filter(l => l.trim() && !l.startsWith('Date'));
-    const recent = lines.slice(-22);
+    const rows = await fetchWorkerRows(s.code.toLowerCase() + '.tw');
+    const recent = rows.slice(-22);
     if (recent.length === 0) throw new Error('no data');
-    labels = recent.map(l => {
-      const dt = l.split(',')[0];
-      return parseInt(dt.slice(5,7)) + '/' + parseInt(dt.slice(8,10));
-    });
-    data = recent.map(l => parseFloat(l.split(',')[4])).filter(v => !isNaN(v));
+    labels = recent.map(c => parseInt(c[0].slice(5,7)) + '/' + parseInt(c[0].slice(8,10)));
+    data = recent.map(c => parseFloat(c[4]));
     if (data.length === 0) throw new Error('no valid data');
     document.getElementById('stock-chart-sub').textContent = data[data.length-1].toLocaleString() + ' 元';
   } catch(e) {
@@ -663,7 +667,7 @@ function openAddModal() {
 }
 function closeModal(e) { if (e.target === document.getElementById('modal')) closeModalDirect(); }
 function closeModalDirect() { document.getElementById('modal').classList.remove('open'); }
-function confirmAddStock() {
+async function confirmAddStock() {
   const code = document.getElementById('modal-code').value.trim();
   const name = document.getElementById('modal-name').value.trim();
   if (!code || !name) { showToast('請填入代號和名稱'); return; }
@@ -672,9 +676,32 @@ function confirmAddStock() {
   stocks.push({ code, name, price: 0, chg: 0 });
   save(KEY_STOCKS, stocks);
   renderStockList();
-  buildJournalStockInputs();
   closeModalDirect();
-  showToast('✓ 已新增 ' + code + ' ' + name);
+  showToast('✓ 已新增 ' + code + '，抓取股價中...');
+  // 自動透過 Worker 抓取最新收盤價與漲跌幅
+  await fetchAndUpdateStockPrice(code);
+}
+
+// 抓取單一個股最新收盤價，更新追蹤清單
+async function fetchAndUpdateStockPrice(code) {
+  try {
+    const rows = await fetchWorkerRows(code.toLowerCase() + '.tw');
+    if (!rows.length) throw new Error('no data');
+    const lastClose = parseFloat(rows[rows.length-1][4]);
+    const prevClose = rows.length >= 2 ? parseFloat(rows[rows.length-2][4]) : lastClose;
+    const chg = prevClose ? ((lastClose - prevClose) / prevClose * 100) : 0;
+    const all = getStocks();
+    const found = all.find(s => s.code === code);
+    if (found) {
+      found.price = lastClose;
+      found.chg = parseFloat(chg.toFixed(2));
+      save(KEY_STOCKS, all);
+      renderStockList();
+      showToast('✓ ' + code + ' 已更新：' + lastClose.toLocaleString() + ' 元');
+    }
+  } catch(e) {
+    showToast('⚠ ' + code + ' 股價抓取失敗，可稍後再試');
+  }
 }
  
 // ── AUTO PRICE FETCH ───────────────────────────────────
