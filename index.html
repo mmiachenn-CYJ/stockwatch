@@ -20,10 +20,10 @@
   --text3: #555a6a;
   --gold: #c9a84c;
   --gold2: #f0c96e;
-  --up: #3ecf8e;
-  --down: #f16063;
-  --up-bg: rgba(62,207,142,0.1);
-  --down-bg: rgba(241,96,99,0.1);
+  --up: #f16063;
+  --down: #3ecf8e;
+  --up-bg: rgba(241,96,99,0.1);
+  --down-bg: rgba(62,207,142,0.1);
   --blue: #4a9eff;
   --radius: 14px;
   --radius-sm: 8px;
@@ -79,13 +79,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .block-us .ai-numbers { font-size: 11px; font-family: var(--mono); color: var(--text3); margin-bottom: 7px; display: flex; gap: 10px; flex-wrap: wrap; }
 .block-us .ai-numbers span { background: rgba(74,158,255,0.12); padding: 2px 7px; border-radius: 4px; }
 /* 今日台股 - 動態色 */
-.block-tw-bull { background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.2); }
+.block-tw-bull { background: rgba(241,96,99,0.08); border: 1px solid rgba(241,96,99,0.2); }
 .block-tw-bull .ai-block-label { color: var(--up); }
-.block-tw-bull .ai-block-title { color: #8ef5cc; }
+.block-tw-bull .ai-block-title { color: #ffaaac; }
 .block-tw-bull .ai-block-plain { color: var(--text2); }
-.block-tw-bear { background: rgba(241,96,99,0.08); border: 1px solid rgba(241,96,99,0.2); }
+.block-tw-bear { background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.2); }
 .block-tw-bear .ai-block-label { color: var(--down); }
-.block-tw-bear .ai-block-title { color: #ffaaac; }
+.block-tw-bear .ai-block-title { color: #8ef5cc; }
 .block-tw-bear .ai-block-plain { color: var(--text2); }
 .block-tw-neu { background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.18); }
 .block-tw-neu .ai-block-label { color: var(--gold); }
@@ -93,8 +93,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .block-tw-neu .ai-block-plain { color: var(--text2); }
 /* 訊號燈 */
 .signal-lamp { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; margin-bottom: 7px; }
-.lamp-bull { background: rgba(62,207,142,0.15); color: var(--up); }
-.lamp-bear { background: rgba(241,96,99,0.15); color: var(--down); }
+.lamp-bull { background: rgba(241,96,99,0.15); color: var(--up); }
+.lamp-bear { background: rgba(62,207,142,0.15); color: var(--down); }
 .lamp-neu { background: rgba(201,168,76,0.15); color: var(--gold2); }
 .lamp-dot { width: 7px; height: 7px; border-radius: 50%; }
 .lamp-bull .lamp-dot { background: var(--up); }
@@ -265,7 +265,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 <!-- PAGE: TRACKER -->
 <div class="page" id="page-tracker">
   <div style="height:16px"></div>
-  <div class="sec-head"><h2>我的追蹤清單</h2><div class="line"></div></div>
+  <div class="sec-head"><h2>我的追蹤清單</h2><div class="line"></div>
+    <button onclick="refreshAllPrices()" style="font-size:11px;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-family:var(--mono);white-space:nowrap;">↺ 更新股價</button>
+  </div>
   <div class="stock-list" id="stock-list"></div>
   <div class="add-stock-btn" onclick="openAddModal()">＋ 新增追蹤股票</div>
  
@@ -530,7 +532,7 @@ async function drawTaiexChart(period) {
     if (data.length === 0) throw new Error('no valid data');
     const last = data[data.length-1];
     const isUp = last >= data[0];
-    const color = isUp ? '#3ecf8e' : '#f16063';
+    const color = isUp ? '#f16063' : '#3ecf8e';
     document.getElementById('taiex-display').textContent = last.toLocaleString() + ' 點';
     const ctx = document.getElementById('taiex-chart').getContext('2d');
     if (taiexChart) taiexChart.destroy();
@@ -542,7 +544,7 @@ async function drawTaiexChart(period) {
           data, borderColor: color, borderWidth: 1.5, tension: 0.3, fill: true,
           backgroundColor: (ctx2) => {
             const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, 100);
-            g.addColorStop(0, isUp ? 'rgba(62,207,142,0.18)' : 'rgba(241,96,99,0.18)');
+            g.addColorStop(0, isUp ? 'rgba(241,96,99,0.18)' : 'rgba(62,207,142,0.18)');
             g.addColorStop(1, 'rgba(0,0,0,0)');
             return g;
           },
@@ -583,14 +585,36 @@ function getStocks() {
     { code: '2330', name: '台積電', price: 1025, chg: -0.49 }
   ]);
 }
- 
+
+function deleteStock(idx, e) {
+  e.stopPropagation();
+  const stocks = getStocks();
+  const s = stocks[idx];
+  if (!confirm('確定要移除 ' + s.code + ' ' + s.name + '？')) return;
+  stocks.splice(idx, 1);
+  save(KEY_STOCKS, stocks);
+  renderStockList();
+  showToast('已移除 ' + s.code);
+}
+
+async function refreshAllPrices() {
+  const stocks = getStocks();
+  showToast('更新股價中...');
+  for (const s of stocks) {
+    try {
+      await fetchAndUpdateStockPrice(s.code);
+    } catch(e) {}
+  }
+}
+
 function renderStockList() {
   const stocks = getStocks();
   const el = document.getElementById('stock-list');
   el.innerHTML = stocks.map((s, i) => {
     const isUp = s.chg >= 0;
-    const chgStr = (isUp ? '+' : '') + s.chg.toFixed(2) + '%';
+    const chgStr = (isUp ? '+' : '') + (s.chg || 0).toFixed(2) + '%';
     const cls = s.chg > 0 ? 'up' : s.chg < 0 ? 'down' : 'flat';
+    const priceStr = s.price ? s.price.toLocaleString() : '--';
     return `<div class="stock-card" onclick="viewStockChart(${i})">
       <div class="stock-icon">${s.code.slice(0,2)}</div>
       <div class="stock-info">
@@ -598,9 +622,10 @@ function renderStockList() {
         <div class="stock-name">${s.name}</div>
       </div>
       <div class="stock-right">
-        <div class="stock-price">${s.price.toLocaleString()}</div>
+        <div class="stock-price">${priceStr}</div>
         <div class="stock-chg ${cls}">${chgStr}</div>
       </div>
+      <div onclick="deleteStock(${i}, event)" style="padding:8px;color:var(--text3);font-size:16px;cursor:pointer;flex-shrink:0;" title="移除">✕</div>
     </div>`;
   }).join('');
 }
@@ -628,7 +653,7 @@ async function viewStockChart(idx) {
   }
   const ctx = document.getElementById('stock-chart').getContext('2d');
   const isUp = data[data.length-1] >= data[0];
-  const color = isUp ? '#3ecf8e' : '#f16063';
+  const color = isUp ? '#f16063' : '#3ecf8e';
   if (stockChart) stockChart.destroy();
   stockChart = new Chart(ctx, {
     type: 'line',
@@ -637,7 +662,7 @@ async function viewStockChart(idx) {
         data, borderColor: color, borderWidth: 1.5, tension: 0.3, fill: true,
         backgroundColor: (ctx2) => {
           const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, 90);
-          g.addColorStop(0, isUp ? 'rgba(62,207,142,0.15)' : 'rgba(241,96,99,0.15)');
+          g.addColorStop(0, isUp ? 'rgba(241,96,99,0.15)' : 'rgba(62,207,142,0.15)');
           g.addColorStop(1, 'rgba(0,0,0,0)');
           return g;
         },
